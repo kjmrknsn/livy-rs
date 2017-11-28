@@ -6,7 +6,7 @@
 This project provides an Apache Livy REST API client in the following two forms:
 
 1. Rust module which can be used by any other Rust programs
-2. Executable binary file which can be executed without any other dependencies such as Rust development environment
+2. Executable binary file which can be executed by itself (i.e. without any other dependencies such as Rust development environment)
 
 ## Supported Versions of Apache Livy
 * 0.3.0
