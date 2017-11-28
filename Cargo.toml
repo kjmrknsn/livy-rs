@@ -1,6 +1,6 @@
 [package]
 name = "livy"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Keiji Yoshida <kjmrknsn@gmail.com>"]
 description = "Apache Livy REST API Client in Rust"
 license = "MIT/Apache-2.0"
