@@ -1,8 +1,11 @@
 [package]
 name = "livy"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Keiji Yoshida <kjmrknsn@gmail.com>"]
 description = "Apache Livy REST API Client in Rust"
 license = "MIT/Apache-2.0"
+homepage = "https://crates.io/crates/livy"
+repository = "https://github.com/kjmrknsn/livy-rs"
+documentation = "https://docs.rs/livy"
 
 [dependencies]
