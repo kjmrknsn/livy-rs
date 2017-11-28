@@ -1,6 +1,5 @@
 //! # livy
-//!
-//! Apache Livy REST API client
+//! Apache Livy REST API Client
 //!
 //! ## Supported Versions of Apache Livy
 //! * 0.3.0

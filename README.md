@@ -3,10 +3,7 @@
 [![Build Status](https://travis-ci.org/kjmrknsn/livy-rs.svg?branch=master)](https://travis-ci.org/kjmrknsn/livy-rs)
 
 ## Abstract
-This project provides an [Apache Livy](https://livy.incubator.apache.org/) REST API client in the following two forms:
-
-1. Rust module which can be used by any other Rust programs
-2. Executable binary file which can be executed by itself (i.e. without any other dependencies such as Rust development environment)
+This crate provides an [Apache Livy](https://livy.incubator.apache.org/) REST API client.
 
 ## Supported Versions of Apache Livy
 * 0.3.0

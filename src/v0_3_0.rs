@@ -21,7 +21,7 @@ impl Client {
     }
 }
 
-/// A session which represents an interactive shell.
+/// Session which represents an interactive shell.
 pub struct Session {
     id: i64,
     app_id: String,
@@ -33,6 +33,7 @@ pub struct Session {
     appInfo: HashMap<String, String>,
 }
 
+/// Session state
 pub enum SessionState {
     NotStarted,
     Starting,
@@ -44,6 +45,7 @@ pub enum SessionState {
     Success,
 }
 
+/// Session kind
 pub enum SessionKind {
     Spark,
     Pyspark,
