@@ -1,6 +1,6 @@
 [package]
 name = "livy"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Keiji Yoshida <kjmrknsn@gmail.com>"]
 description = "Apache Livy REST API Client in Rust"
 license = "MIT/Apache-2.0"
@@ -13,5 +13,9 @@ categories = ["api-bindings", "command-line-utilities", "web-programming::http-c
 
 [badges]
 travis-ci = { repository = "kjmrknsn/livy-rs", branch = "master" }
+
+[[bin]]
+name = "livy"
+doc = false
 
 [dependencies]
