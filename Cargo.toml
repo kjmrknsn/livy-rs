@@ -13,5 +13,6 @@ categories = ["api-bindings", "command-line-utilities", "web-programming::http-c
 
 [badges]
 travis-ci = { repository = "kjmrknsn/livy-rs", branch = "master" }
+codecov = { repository = "kjmrknsn/livy-rs", branch = "master", service = "github" }
 
 [dependencies]
