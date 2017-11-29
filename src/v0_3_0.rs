@@ -18,22 +18,16 @@ impl Client {
     /// ```
     pub fn new(url: &str) -> Client {
         Client {
-            url: Self::remove_trailing_slash(url),
+            url: remove_trailing_slash(url),
             client: http::Client::new(),
         }
     }
 
-    fn remove_trailing_slash(url: &str) -> String {
-        if url.ends_with("/") {
-            url[..url.len()-1].to_string()
-        } else {
-            url.to_string()
-        }
-    }
+
 
     /// Gets information of a single session.
     pub fn get_session(&self, session_id: i64) -> Result<Session, String> {
-        self.client.get(&format!("{}/sessions/{}", self.url, session_id))
+        self.client.get(format!("{}/sessions/{}", self.url, session_id).as_str())
     }
 }
 
@@ -117,6 +111,17 @@ pub enum SessionKind {
     Sparkr,
 }
 
+/// Removes the trailing slash of `s` if it exists,
+/// constructs a new `String` from the result and
+/// returns it.
+fn remove_trailing_slash(s: &str) -> String {
+    if s.ends_with("/") {
+        s[..s.len()-1].to_string()
+    } else {
+        s.to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -150,65 +155,88 @@ mod tests {
     }
 
     #[test]
-    fn client_new() {
+    fn test_client_new() {
         let url = "http://example.com:8998";
         let client = Client::new(url);
         assert_eq!(url, client.url);
     }
 
     #[test]
-    fn session_id() {
+    fn test_session_id() {
         for session in vec![Session::some(), Session::none()] {
             assert_eq!(session.id, session.id());
         }
     }
 
     #[test]
-    fn session_app_id() {
+    fn test_session_app_id() {
         for session in vec![Session::some(), Session::none()] {
             assert_eq!(session.app_id.as_ref().map(String::as_str), session.app_id());
         }
     }
 
     #[test]
-    fn session_owner() {
+    fn test_session_owner() {
         for session in vec![Session::some(), Session::none()] {
             assert_eq!(session.owner.as_ref().map(String::as_str), session.owner());
         }
     }
 
     #[test]
-    fn session_proxy_user() {
+    fn test_session_proxy_user() {
         for session in vec![Session::some(), Session::none()] {
             assert_eq!(session.proxy_user.as_ref().map(String::as_str), session.proxy_user());
         }
     }
 
     #[test]
-    fn session_kind() {
+    fn test_session_kind() {
         for session in vec![Session::some(), Session::none()] {
             assert_eq!(session.kind.as_ref(), session.kind());
         }
     }
 
     #[test]
-    fn session_log() {
+    fn test_session_log() {
         for session in vec![Session::some(), Session::none()] {
             assert_eq!(session.log.as_ref(), session.log());
         }
     }
 
     #[test]
-    fn session_state() {
+    fn test_session_state() {
         for session in vec![Session::some(), Session::none()] {
             assert_eq!(session.state.as_ref(), session.state());
         }
     }
 
     #[test]
-    fn session_app_info() {
+    fn test_session_app_info() {
         for session in vec![Session::some(), Session::none()] {
             assert_eq!(session.app_info.as_ref(), session.app_info());
+        }
+    }
+
+    #[test]
+    fn test_remove_trailing_slash() {
+        struct TestCase {
+            s: &'static str,
+            expected: String,
+        }
+
+        let test_cases = vec![
+            TestCase {
+                s: "http://example.com/",
+                expected: "http://example.com".to_string(),
+            },
+            TestCase {
+                s: "http://example.com",
+                expected: "http://example.com".to_string(),
+            },
+        ];
+
+        for test_case in test_cases {
+            assert_eq!(test_case.expected, remove_trailing_slash(test_case.s));
         }
     }
 }
