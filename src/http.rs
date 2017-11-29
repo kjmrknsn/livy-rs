@@ -7,12 +7,22 @@ pub struct Client {
 }
 
 impl Client {
+    /// Constructs a new `Client`.
+    ///
+    /// # Examples
+    /// ```
+    /// use livy::http::Client;
+    ///
+    /// let client = Client::new();
+    /// ```
     pub fn new() -> Client {
         Client {
             client: reqwest::Client::new(),
         }
     }
 
+    /// Sends an HTTP GET request to `url`, deserializes the response body and
+    /// returns the result.
     pub fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, String> {
         let mut res = match self.client.get(url).send() {
             Ok(res) => res,
