@@ -1,8 +1,10 @@
+use http;
 use std::collections::HashMap;
 
 /// Apache Livy REST API client
 pub struct Client {
-    base_url: String,
+    url: String,
+    client: http::Client,
 }
 
 impl Client {
@@ -12,30 +14,32 @@ impl Client {
     /// ```
     /// use livy::v0_3_0::Client;
     ///
-    /// let client = Client::new("http://example.com:8998/");
+    /// let client = Client::new("http://example.com:8998");
     /// ```
-    pub fn new(base_url: &str) -> Client {
+    pub fn new(url: &str) -> Client {
         Client {
-            base_url: String::from(base_url),
+            url: Self::remove_trailing_slash(url),
+            client: http::Client::new(),
+        }
+    }
+
+    fn remove_trailing_slash(url: &str) -> String {
+        if url.ends_with("/") {
+            url[..url.len()-1].to_string()
+        } else {
+            url.to_string()
         }
     }
 
     /// Gets information of a single session.
-    pub fn get_session(session_id: i64) -> Result<Session, &'static str> {
-        Ok(Session {
-            id: Some(0),
-            app_id: Some(String::from("")),
-            owner: Some(String::from("")),
-            proxy_user: Some(String::from("")),
-            kind: Some(SessionKind::Spark),
-            log: Some(Vec::new()),
-            state: Some(SessionState::NotStarted),
-            app_info: Some(HashMap::new()),
-        })
+    pub fn get_session(&self, session_id: i64) -> Result<Session, String> {
+        self.client.get(&format!("{}/sessions/{}", self.url, session_id))
     }
 }
 
 /// Session which represents an interactive shell.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Session {
     id: Option<i64>,
     app_id: Option<String>,
@@ -90,7 +94,8 @@ impl Session {
 }
 
 /// Session state
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub enum SessionState {
     NotStarted,
     Starting,
@@ -103,7 +108,8 @@ pub enum SessionState {
 }
 
 /// Session kind
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub enum SessionKind {
     Spark,
     Pyspark,
@@ -145,9 +151,9 @@ mod tests {
 
     #[test]
     fn client_new() {
-        let base_url = "http://example.com:8998/";
-        let client = Client::new(base_url);
-        assert_eq!(base_url, client.base_url);
+        let url = "http://example.com:8998";
+        let client = Client::new(url);
+        assert_eq!(url, client.url);
     }
 
     #[test]
