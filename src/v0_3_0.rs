@@ -23,16 +23,61 @@ impl Client {
         }
     }
 
+    /// Gets information of sessions and returns it.
+    pub fn get_sessions(&self, from: Option<i64>, size: Option<i64>) -> Result<Sessions, String> {
+        let mut params = Vec::new();
 
+        if let Some(from) = from {
+            params.push(format!("from={}", from));
+        }
 
-    /// Gets information of a single session.
+        if let Some(size) = size {
+            params.push(format!("size={}", size));
+        }
+
+        let params = if params.len() > 0 {
+            format!("?{}", params.join("&"))
+        } else {
+            String::new()
+        };
+
+        self.client.get(format!("{}/sessions{}", self.url, params).as_str())
+    }
+
+    /// Gets information of a single session and returns it.
     pub fn get_session(&self, session_id: i64) -> Result<Session, String> {
         self.client.get(format!("{}/sessions/{}", self.url, session_id).as_str())
     }
 }
 
-/// Session which represents an interactive shell.
+/// Active interactive sessions
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Sessions {
+    from: Option<i64>,
+    total: Option<i64>,
+    sessions: Option<Vec<Session>>,
+}
+
+impl Sessions {
+    /// Returns `from` of the sessions.
+    pub fn from(&self) -> Option<i64> {
+        self.from
+    }
+
+    /// Returns `total` of the sessions.
+    pub fn total(&self) -> Option<i64> {
+        self.total
+    }
+
+    /// Returns `sessions` of the sessions.
+    pub fn sessions(&self) -> Option<&Vec<Session>> {
+        self.sessions.as_ref()
+    }
+}
+
+/// Session which represents an interactive shell
+#[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Session {
     id: Option<i64>,
@@ -126,6 +171,24 @@ fn remove_trailing_slash(s: &str) -> String {
 mod tests {
     use super::*;
 
+    impl Sessions {
+        fn some() -> Sessions {
+            Sessions {
+                from: Some(0),
+                total: Some(1),
+                sessions: Some(Vec::new()),
+            }
+        }
+
+        fn none() -> Sessions {
+            Sessions {
+                from: None,
+                total: None,
+                sessions: None,
+            }
+        }
+    }
+
     impl Session {
         fn some() -> Session {
             Session {
@@ -159,6 +222,27 @@ mod tests {
         let url = "http://example.com:8998";
         let client = Client::new(url);
         assert_eq!(url, client.url);
+    }
+
+    #[test]
+    fn test_sessions_from() {
+        for sessions in vec![Sessions::some(), Sessions::none()] {
+            assert_eq!(sessions.from, sessions.from());
+        }
+    }
+
+    #[test]
+    fn test_sessions_total() {
+        for sessions in vec![Sessions::some(), Sessions::none()] {
+            assert_eq!(sessions.total, sessions.total());
+        }
+    }
+
+    #[test]
+    fn test_sessions_sessions() {
+        for sessions in vec![Sessions::some(), Sessions::none()] {
+            assert_eq!(sessions.sessions.as_ref(), sessions.sessions());
+        }
     }
 
     #[test]
