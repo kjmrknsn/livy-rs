@@ -5,12 +5,14 @@
 //! * 0.3.0
 //! * 0.4.0
 
+#[macro_use]
+extern crate hyper;
 extern crate reqwest;
 extern crate serde;
-extern crate serde_json;
-
 #[macro_use]
 extern crate serde_derive;
+extern crate serde_json;
+
 
 /// Utilities for sending an HTTP request and receiving an HTTP response
 pub mod http;

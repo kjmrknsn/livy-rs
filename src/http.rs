@@ -2,6 +2,8 @@ use reqwest;
 use serde::de::DeserializeOwned;
 use std::fmt::Display;
 
+header! { (XRequestedBy, "X-Requested-By") => [String] }
+
 /// HTTP client
 pub struct Client {
     client: reqwest::Client,
@@ -40,6 +42,20 @@ impl Client {
             Ok(res) => Ok(res),
             Err(err) => Err(format!("{}", err)),
         }
+    }
+
+    /// Send an HTTP DELETE request to `url`.
+    pub fn delete(&self, url: &str) -> Result<(), String> {
+        let res = match self.client.delete(url).header(XRequestedBy("x".to_owned())).send() {
+            Ok(res) => res,
+            Err(err) => return Err(format!("{}", err))
+        };
+
+        if res.status() != reqwest::StatusCode::Ok {
+            return Err(format!("invalid status code: {}", res.status()));
+        }
+
+        Ok(())
     }
 }
 

@@ -39,8 +39,14 @@ impl Client {
         self.client.get(format!("{}/sessions/{}", self.url, session_id).as_str())
     }
 
+    /// Gets session state information of a single session and returns it.
     pub fn get_session_state(&self, session_id: i64) -> Result<SessionStateOnly, String> {
         self.client.get(format!("{}/sessions/{}/state", self.url, session_id).as_str())
+    }
+
+    /// Deletes the session whose id is equal to `session_id`.
+    pub fn delete_session(&self, session_id: i64) -> Result<(), String> {
+        self.client.delete(format!("{}/sessions/{}", self.url, session_id).as_str())
     }
 }
 
