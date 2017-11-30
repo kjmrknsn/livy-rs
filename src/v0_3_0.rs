@@ -1,5 +1,6 @@
 use http;
 use std::collections::HashMap;
+use utils;
 
 /// Apache Livy REST API client
 pub struct Client {
@@ -18,7 +19,7 @@ impl Client {
     /// ```
     pub fn new(url: &str) -> Client {
         Client {
-            url: remove_trailing_slash(url),
+            url: utils::remove_trailing_slash(url),
             client: http::Client::new(),
         }
     }
@@ -156,17 +157,6 @@ pub enum SessionKind {
     Sparkr,
 }
 
-/// Removes the trailing slash of `s` if it exists,
-/// constructs a new `String` from the result and
-/// returns it.
-fn remove_trailing_slash(s: &str) -> String {
-    if s.ends_with("/") {
-        s[..s.len()-1].to_string()
-    } else {
-        s.to_string()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -298,29 +288,6 @@ mod tests {
     fn test_session_app_info() {
         for session in vec![Session::some(), Session::none()] {
             assert_eq!(session.app_info.as_ref(), session.app_info());
-        }
-    }
-
-    #[test]
-    fn test_remove_trailing_slash() {
-        struct TestCase {
-            s: &'static str,
-            expected: String,
-        }
-
-        let test_cases = vec![
-            TestCase {
-                s: "http://example.com/",
-                expected: "http://example.com".to_string(),
-            },
-            TestCase {
-                s: "http://example.com",
-                expected: "http://example.com".to_string(),
-            },
-        ];
-
-        for test_case in test_cases {
-            assert_eq!(test_case.expected, remove_trailing_slash(test_case.s));
         }
     }
 }
