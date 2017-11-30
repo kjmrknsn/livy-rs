@@ -1,10 +1,11 @@
 use http;
+use http::client;
 use std::collections::HashMap;
 
 /// Apache Livy REST API client
 pub struct Client {
     url: String,
-    client: http::Client,
+    client: client::BasicClient,
 }
 
 impl Client {
@@ -19,7 +20,7 @@ impl Client {
     pub fn new(url: &str) -> Client {
         Client {
             url: http::remove_trailing_slash(url),
-            client: http::Client::new(),
+            client: client::BasicClient::new(),
         }
     }
 
@@ -111,7 +112,7 @@ pub struct Session {
     kind: Option<SessionKind>,
     log: Option<Vec<String>>,
     state: Option<SessionState>,
-    app_info: Option<HashMap<String, String>>,
+    app_info: Option<HashMap<String, Option<String>>>,
 }
 
 impl Session {
@@ -151,7 +152,7 @@ impl Session {
     }
 
     /// Returns `app_info` of the session.
-    pub fn app_info(&self) -> Option<&HashMap<String, String>> {
+    pub fn app_info(&self) -> Option<&HashMap<String, Option<String>>> {
         self.app_info.as_ref()
     }
 }
@@ -256,7 +257,7 @@ impl Statement {
 pub struct StatementOutput {
     status: Option<String>,
     execution_count: Option<i64>,
-    data: Option<HashMap<String, String>>,
+    data: Option<HashMap<String, Option<String>>>,
 }
 
 impl StatementOutput {
@@ -271,7 +272,7 @@ impl StatementOutput {
     }
 
     /// Returns `data` of the statement output.
-    pub fn data(&self) -> Option<&HashMap<String, String>> {
+    pub fn data(&self) -> Option<&HashMap<String, Option<String>>> {
         self.data.as_ref()
     }
 }
