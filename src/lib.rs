@@ -16,7 +16,5 @@ extern crate serde_json;
 
 /// Utilities for sending an HTTP request and receiving an HTTP response
 pub mod http;
-/// Common utilities
-pub mod utils;
 /// Apache Livy 0.3.0 REST API client
 pub mod v0_3_0;

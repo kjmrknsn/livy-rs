@@ -1,6 +1,5 @@
 use http;
 use std::collections::HashMap;
-use utils;
 
 /// Apache Livy REST API client
 pub struct Client {
@@ -19,7 +18,7 @@ impl Client {
     /// ```
     pub fn new(url: &str) -> Client {
         Client {
-            url: utils::remove_trailing_slash(url),
+            url: http::remove_trailing_slash(url),
             client: http::Client::new(),
         }
     }
