@@ -1,6 +1,6 @@
 [package]
 name = "livy"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Keiji Yoshida <kjmrknsn@gmail.com>"]
 description = "Apache Livy REST API Client"
 license = "MIT/Apache-2.0"
