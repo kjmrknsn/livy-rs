@@ -18,3 +18,5 @@ extern crate serde_json;
 pub mod http;
 /// Apache Livy 0.3.0 REST API client
 pub mod v0_3_0;
+/// Apache Livy 0.4.0 REST API client
+pub mod v0_4_0;
