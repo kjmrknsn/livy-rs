@@ -10,3 +10,26 @@ This crate provides an [Apache Livy](https://livy.incubator.apache.org/) REST AP
 ## Supported Versions of Apache Livy
 * 0.3.0
 * 0.4.0
+
+## Current Status
+This crate is still under development. There are some unimplemented APIs.
+
+### Implemented APIs
+* GET /sessions
+* GET /sessions/{sessionId}
+* GET /sessions/{sessionId}/state
+* DELETE /sessions/{sessionId}
+* GET /sessions/{sessionId}/logs
+* GET /sessions/{sessionId}/statements
+* GET /sessions/{sessionId}/statements/{statementId}
+* POST /sessions/{sessionId}/statements/{statementId}/cancel
+
+### Unimplemented APIs
+* POST /sessions
+* POST /sessions/{sessionId}/statements
+* GET /batches
+* POST /batches
+* GET /batches/{batchId}
+* GET /batches/{batchId}/state
+* DELETE /batches/{batchId}
+* GET /batches/{batchId}/log
