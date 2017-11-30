@@ -1,3 +1,4 @@
+use hyper::header::ContentType;
 use reqwest;
 use serde::de::DeserializeOwned;
 use std::fmt::Display;
@@ -27,7 +28,7 @@ impl Client {
     /// Sends an HTTP GET request to `url`, deserializes the response body and
     /// returns the result.
     pub fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, String> {
-        let mut res = match self.client.get(url).send() {
+        let mut res = match self.client.get(url).header(ContentType::json()).send() {
             Ok(res) => res,
             Err(err) => return Err(format!("{}", err)),
         };
@@ -46,7 +47,10 @@ impl Client {
 
     /// Send an HTTP DELETE request to `url`.
     pub fn delete(&self, url: &str) -> Result<(), String> {
-        let res = match self.client.delete(url).header(XRequestedBy("x".to_owned())).send() {
+        let res = match self.client.delete(url)
+            .header(ContentType::json())
+            .header(XRequestedBy("x".to_owned()))
+            .send() {
             Ok(res) => res,
             Err(err) => return Err(format!("{}", err))
         };

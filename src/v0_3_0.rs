@@ -58,6 +58,16 @@ impl Client {
 
         self.client.get(format!("{}/sessions/{}/log{}", self.url, session_id, params).as_str())
     }
+
+    /// Gets the statements of a single session and returns them.
+    pub fn get_statements(&self, session_id: i64) -> Result<Statements, String> {
+        self.client.get(format!("{}/sessions/{}/statements", self.url, session_id).as_str())
+    }
+
+    /// Gets a single statement of a single session and returns it.
+    pub fn get_statement(&self, session_id: i64, statement_id: i64) -> Result<Statement, String> {
+        self.client.get(format!("{}/sessions/{}/statements/{}", self.url, session_id, statement_id).as_str())
+    }
 }
 
 /// Active interactive sessions
@@ -193,6 +203,75 @@ impl SessionLog {
     }
 }
 
+/// Statements
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct Statements {
+    total_statements: Option<i64>,
+    statements: Option<Vec<Statement>>,
+}
+
+impl Statements {
+    /// Returns `total_statements` of the statements.
+    pub fn total_statements(&self) -> Option<i64> {
+        self.total_statements
+    }
+
+    /// Returns `statements` of the statements.
+    pub fn statements(&self) -> Option<&Vec<Statement>> {
+        self.statements.as_ref()
+    }
+}
+
+/// Statement
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct Statement {
+    id: Option<i64>,
+    state: Option<StatementState>,
+    output: Option<StatementOutput>,
+}
+
+impl Statement {
+    /// Returns `id` of the statement.
+    pub fn id(&self) -> Option<i64> {
+        self.id
+    }
+
+    /// Returns `state` of the statement.
+    pub fn state(&self) -> Option<&StatementState> {
+        self.state.as_ref()
+    }
+
+    /// Returns `output` of the statement.
+    pub fn output(&self) -> Option<&StatementOutput> {
+        self.output.as_ref()
+    }
+}
+
+/// Statement output
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct StatementOutput {
+    status: Option<String>,
+    execution_count: Option<i64>,
+    data: Option<HashMap<String, String>>,
+}
+
+impl StatementOutput {
+    /// Returns `status` of the statement output.
+    pub fn status(&self) -> Option<&str> {
+        self.status.as_ref().map(String::as_str)
+    }
+
+    /// Returns `execution_count` of the statement output.
+    pub fn execution_count(&self) -> Option<i64> {
+        self.execution_count
+    }
+
+    /// Returns `data` of the statement output.
+    pub fn data(&self) -> Option<&HashMap<String, String>> {
+        self.data.as_ref()
+    }
+}
+
 /// Session state
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -215,6 +294,18 @@ pub enum SessionKind {
     Pyspark,
     Pyspark3,
     Sparkr,
+}
+
+/// Statement state
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum StatementState {
+    Waiting,
+    Running,
+    Available,
+    Error,
+    Cancelling,
+    Cancelled,
 }
 
 #[cfg(test)]
@@ -243,9 +334,9 @@ mod tests {
         fn some() -> Session {
             Session {
                 id: Some(0),
-                app_id: Some(String::from("app_id")),
-                owner: Some(String::from("owner")),
-                proxy_user: Some(String::from("proxy_user")),
+                app_id: Some("app_id".to_string()),
+                owner: Some("owner".to_string()),
+                proxy_user: Some("proxy_user".to_string()),
                 kind: Some(SessionKind::Spark),
                 log: Some(Vec::new()),
                 state: Some(SessionState::NotStarted),
@@ -299,6 +390,58 @@ mod tests {
                 from: None,
                 total: None,
                 log: None,
+            }
+        }
+    }
+
+    impl Statements {
+        fn some() -> Statements {
+            Statements {
+                total_statements: Some(0),
+                statements: Some(Vec::new()),
+            }
+        }
+
+        fn none() -> Statements {
+            Statements {
+                total_statements: None,
+                statements: None,
+            }
+        }
+    }
+
+    impl Statement {
+        fn some() -> Statement {
+            Statement {
+                id: Some(0),
+                state: Some(StatementState::Waiting),
+                output: Some(StatementOutput::some()),
+            }
+        }
+
+        fn none() -> Statement {
+            Statement {
+                id: None,
+                state: None,
+                output: None,
+            }
+        }
+    }
+
+    impl StatementOutput {
+        fn some() -> StatementOutput {
+            StatementOutput {
+                status: Some("status".to_string()),
+                execution_count: Some(0),
+                data: Some(HashMap::new()),
+            }
+        }
+
+        fn none() -> StatementOutput {
+            StatementOutput {
+                status: None,
+                execution_count: None,
+                data: None,
             }
         }
     }
@@ -426,6 +569,62 @@ mod tests {
     fn test_session_log_log() {
         for session_log in vec![SessionLog::some(), SessionLog::none()] {
             assert_eq!(session_log.log.as_ref(), session_log.log());
+        }
+    }
+
+    #[test]
+    fn test_statements_total_statements() {
+        for statements in vec![Statements::some(), Statements::none()] {
+            assert_eq!(statements.total_statements, statements.total_statements());
+        }
+    }
+
+    #[test]
+    fn test_statements_statements() {
+        for statements in vec![Statements::some(), Statements::none()] {
+            assert_eq!(statements.statements.as_ref(), statements.statements());
+        }
+    }
+
+    #[test]
+    fn test_statement_id() {
+        for statement in vec![Statement::some(), Statement::none()] {
+            assert_eq!(statement.id, statement.id());
+        }
+    }
+
+    #[test]
+    fn test_statement_state() {
+        for statement in vec![Statement::some(), Statement::none()] {
+            assert_eq!(statement.state.as_ref(), statement.state());
+        }
+    }
+
+    #[test]
+    fn test_statement_output() {
+        for statement in vec![Statement::some(), Statement::none()] {
+            assert_eq!(statement.output.as_ref(), statement.output());
+        }
+    }
+
+    #[test]
+    fn test_statement_output_status() {
+        for statement_output in vec![StatementOutput::some(), StatementOutput::none()] {
+            assert_eq!(statement_output.status.as_ref().map(String::as_str), statement_output.status());
+        }
+    }
+
+    #[test]
+    fn test_statement_output_execution_count() {
+        for statement_output in vec![StatementOutput::some(), StatementOutput::none()] {
+            assert_eq!(statement_output.execution_count, statement_output.execution_count());
+        }
+    }
+
+    #[test]
+    fn test_statement_output_data() {
+        for statement_output in vec![StatementOutput::some(), StatementOutput::none()] {
+            assert_eq!(statement_output.data.as_ref(), statement_output.data());
         }
     }
 }
