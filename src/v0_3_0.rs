@@ -48,6 +48,16 @@ impl Client {
     pub fn delete_session(&self, session_id: i64) -> Result<(), String> {
         self.client.delete(format!("{}/sessions/{}", self.url, session_id).as_str())
     }
+
+    /// Gets the log lines of a single session and returns them.
+    pub fn get_session_log(&self, session_id: i64, from: Option<i64>, size: Option<i64>)-> Result<SessionLog, String> {
+        let params = http::params(vec![
+            http::param("from", from),
+            http::param("size", size)
+        ]);
+
+        self.client.get(format!("{}/sessions/{}/log{}", self.url, session_id, params).as_str())
+    }
 }
 
 /// Active interactive sessions
@@ -140,7 +150,6 @@ pub struct SessionStateOnly {
     state: Option<SessionState>,
 }
 
-
 impl SessionStateOnly {
     /// Returns `id` of the session.
     pub fn id(&self) -> Option<i64> {
@@ -150,6 +159,37 @@ impl SessionStateOnly {
     /// Returns `state` of the session.
     pub fn state(&self) -> Option<&SessionState> {
         self.state.as_ref()
+    }
+}
+
+/// Session log
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionLog {
+    id: Option<i64>,
+    from: Option<i64>,
+    total: Option<i64>,
+    log: Option<Vec<String>>,
+}
+
+impl SessionLog {
+    /// Returns `id` of the session.
+    pub fn id(&self) -> Option<i64> {
+        self.id
+    }
+
+    /// Returns `from` of the session log.
+    pub fn from(&self) -> Option<i64> {
+        self.from
+    }
+
+    /// Returns `total` of the session log.
+    pub fn total(&self) -> Option<i64> {
+        self.total
+    }
+    /// Returns `log` of the session log.
+    pub fn log(&self) -> Option<&Vec<String>> {
+        self.log.as_ref()
     }
 }
 
@@ -239,6 +279,26 @@ mod tests {
             SessionStateOnly {
                 id: None,
                 state: None,
+            }
+        }
+    }
+
+    impl SessionLog {
+        fn some() -> SessionLog {
+            SessionLog {
+                id: Some(0),
+                from: Some(1),
+                total: Some(2),
+                log: Some(Vec::new()),
+            }
+        }
+
+        fn none() -> SessionLog {
+            SessionLog {
+                id: None,
+                from: None,
+                total: None,
+                log: None,
             }
         }
     }
@@ -338,6 +398,34 @@ mod tests {
     fn test_session_state_only_state() {
         for session_state_only in vec![SessionStateOnly::some(), SessionStateOnly::none()] {
             assert_eq!(session_state_only.state.as_ref(), session_state_only.state());
+        }
+    }
+
+    #[test]
+    fn test_session_log_id() {
+        for session_log in vec![SessionLog::some(), SessionLog::none()] {
+            assert_eq!(session_log.id, session_log.id());
+        }
+    }
+
+    #[test]
+    fn test_session_log_from() {
+        for session_log in vec![SessionLog::some(), SessionLog::none()] {
+            assert_eq!(session_log.from, session_log.from());
+        }
+    }
+
+    #[test]
+    fn test_session_log_total() {
+        for session_log in vec![SessionLog::some(), SessionLog::none()] {
+            assert_eq!(session_log.total, session_log.total());
+        }
+    }
+
+    #[test]
+    fn test_session_log_log() {
+        for session_log in vec![SessionLog::some(), SessionLog::none()] {
+            assert_eq!(session_log.log.as_ref(), session_log.log());
         }
     }
 }
