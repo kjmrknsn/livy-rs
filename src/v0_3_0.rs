@@ -26,9 +26,9 @@ impl Client {
 
     /// Gets information of sessions and returns it.
     pub fn get_sessions(&self, from: Option<i64>, size: Option<i64>) -> Result<Sessions, String> {
-        let params = utils::params(vec![
-            utils::param("from", from),
-            utils::param("size", size)
+        let params = http::params(vec![
+            http::param("from", from),
+            http::param("size", size)
         ]);
 
         self.client.get(format!("{}/sessions{}", self.url, params).as_str())
