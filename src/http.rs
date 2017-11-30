@@ -45,7 +45,31 @@ impl Client {
         }
     }
 
-    /// Send an HTTP DELETE request to `url`.
+    /// Sends an HTTP POST request to `url`, deserializes the response body and
+    /// returns the result.
+    pub fn post<T: DeserializeOwned>(&self, url: &str, body: String) -> Result<T, String> {
+        let mut res = match self.client.post(url)
+            .header(ContentType::json())
+            .header(XRequestedBy("x".to_owned()))
+            .body(body)
+            .send() {
+            Ok(res) => res,
+            Err(err) => return Err(format!("{}", err))
+        };
+
+        if res.status() != reqwest::StatusCode::Ok {
+            return Err(format!("invalid status code: {}", res.status()));
+        }
+
+        let res: reqwest::Result<T> = res.json();
+
+        match res {
+            Ok(res) => Ok(res),
+            Err(err) => Err(format!("{}", err)),
+        }
+    }
+
+    /// Sends an HTTP DELETE request to `url`.
     pub fn delete(&self, url: &str) -> Result<(), String> {
         let res = match self.client.delete(url)
             .header(ContentType::json())

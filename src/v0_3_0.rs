@@ -67,6 +67,11 @@ impl Client {
     pub fn get_statement(&self, session_id: i64, statement_id: i64) -> Result<Statement, String> {
         self.client.get(format!("{}/sessions/{}/statements/{}", self.url, session_id, statement_id).as_str())
     }
+
+    /// Cancel a single statement.
+    pub fn cancel_statement(&self, session_id: i64, statement_id: i64) -> Result<StatementCancelResult, String> {
+        self.client.post(format!("{}/sessions/{}/statements/{}/cancel", self.url, session_id, statement_id).as_str(), String::new())
+    }
 }
 
 /// Active interactive sessions
@@ -271,6 +276,19 @@ impl StatementOutput {
     }
 }
 
+/// Statement cancel result
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct StatementCancelResult {
+    msg: Option<String>,
+}
+
+impl StatementCancelResult {
+    /// Returns `msg` of the statement cancel result.
+    pub fn msg(&self) -> Option<&str> {
+        self.msg.as_ref().map(String::as_str)
+    }
+}
+
 /// Session state
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -441,6 +459,20 @@ mod tests {
                 status: None,
                 execution_count: None,
                 data: None,
+            }
+        }
+    }
+
+    impl StatementCancelResult {
+        fn some() -> StatementCancelResult {
+            StatementCancelResult {
+                msg: Some(String::new()),
+            }
+        }
+
+        fn none() -> StatementCancelResult {
+            StatementCancelResult {
+                msg: None,
             }
         }
     }
@@ -624,6 +656,13 @@ mod tests {
     fn test_statement_output_data() {
         for statement_output in vec![StatementOutput::some(), StatementOutput::none()] {
             assert_eq!(statement_output.data.as_ref(), statement_output.data());
+        }
+    }
+
+    #[test]
+    fn test_statement_cancel_result_msg() {
+        for statement_cancel_result in vec![StatementCancelResult::some(), StatementCancelResult::none()] {
+            assert_eq!(statement_cancel_result.msg.as_ref().map(String::as_str), statement_cancel_result.msg());
         }
     }
 }
