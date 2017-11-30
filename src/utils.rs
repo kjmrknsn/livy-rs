@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 /// Constructs a new `String` which represents a key-value
 /// parameter string from `key` and `value` and returns the
-/// result as a form of `Some(String)`
+/// result as a form of `Some(String)`.
 ///
 /// Returns `None` if `value` is `None`.
 ///
@@ -18,6 +18,52 @@ pub fn param<T: Display>(key: &str, value: Option<T>) -> Option<String> {
         Some(value) => Some(format!("{}={}", key, value)),
         None => None
     }
+}
+
+/// Constructs a new `String` which represents a key-value parameters
+/// string as a form of `"?key1=value1&key2=value2&..."`.
+///
+/// Returns an empty string if there is no `Some(String)` value in `params`.
+///
+/// # Examples
+/// ```
+/// use livy::utils;
+///
+/// assert_eq!("".to_string(),
+///            utils::params(vec![]));
+/// assert_eq!("".to_string(),
+///            utils::params(vec![None]));
+/// assert_eq!("?key1=value1",
+///            utils::params(vec![Some("key1=value1".to_string())]));
+/// assert_eq!("?key1=value1",
+///            utils::params(vec![Some("key1=value1".to_string()),
+///                               None]));
+/// assert_eq!("?key1=value1",
+///            utils::params(vec![None,
+///                               Some("key1=value1".to_string())]));
+/// assert_eq!("?key1=value1&key2=value2",
+///            utils::params(vec![Some("key1=value1".to_string()),
+///                               Some("key2=value2".to_string())]));
+/// ```
+pub fn params(params: Vec<Option<String>>) -> String {
+    let mut s = String::new();
+
+    for param in params {
+        match param {
+            Some(param) => {
+                if s.is_empty() {
+                    s.push('?');
+                } else {
+                    s.push('&');
+                }
+
+                s.push_str(param.as_str());
+            },
+            None => (),
+        }
+    }
+
+    s
 }
 
 /// Removes the trailing slash of `s` if it exists,
@@ -66,6 +112,45 @@ mod tests {
 
         for test_case in test_cases {
             assert_eq!(test_case.expected, param(test_case.key, test_case.value));
+        }
+    }
+
+    #[test]
+    fn test_params() {
+        struct TestCase {
+            params: Vec<Option<String>>,
+            expected: String,
+        }
+
+        let test_cases = vec![
+            TestCase {
+                params: vec![],
+                expected: "".to_string(),
+            },
+            TestCase {
+                params: vec![None],
+                expected: "".to_string(),
+            },
+            TestCase {
+                params: vec![Some("key1=value1".to_string())],
+                expected: "?key1=value1".to_string(),
+            },
+            TestCase {
+                params: vec![Some("key1=value1".to_string()), None],
+                expected: "?key1=value1".to_string(),
+            },
+            TestCase {
+                params: vec![None, Some("key1=value1".to_string())],
+                expected: "?key1=value1".to_string(),
+            },
+            TestCase {
+                params: vec![Some("key1=value1".to_string()), Some("key2=value2".to_string())],
+                expected: "?key1=value1&key2=value2".to_string(),
+            },
+        ];
+
+        for test_case in test_cases {
+            assert_eq!(test_case.expected, params(test_case.params));
         }
     }
 

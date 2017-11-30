@@ -26,21 +26,10 @@ impl Client {
 
     /// Gets information of sessions and returns it.
     pub fn get_sessions(&self, from: Option<i64>, size: Option<i64>) -> Result<Sessions, String> {
-        let mut params = Vec::new();
-
-        if let Some(from) = from {
-            params.push(format!("from={}", from));
-        }
-
-        if let Some(size) = size {
-            params.push(format!("size={}", size));
-        }
-
-        let params = if params.len() > 0 {
-            format!("?{}", params.join("&"))
-        } else {
-            String::new()
-        };
+        let params = utils::params(vec![
+            utils::param("from", from),
+            utils::param("size", size)
+        ]);
 
         self.client.get(format!("{}/sessions{}", self.url, params).as_str())
     }
