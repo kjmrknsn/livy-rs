@@ -38,6 +38,10 @@ impl Client {
     pub fn get_session(&self, session_id: i64) -> Result<Session, String> {
         self.client.get(format!("{}/sessions/{}", self.url, session_id).as_str())
     }
+
+    pub fn get_session_state(&self, session_id: i64) -> Result<SessionStateOnly, String> {
+        self.client.get(format!("{}/sessions/{}/state", self.url, session_id).as_str())
+    }
 }
 
 /// Active interactive sessions
@@ -122,6 +126,27 @@ impl Session {
     }
 }
 
+/// Session information which has only its state information
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionStateOnly {
+    id: Option<i64>,
+    state: Option<SessionState>,
+}
+
+
+impl SessionStateOnly {
+    /// Returns `id` of the session.
+    pub fn id(&self) -> Option<i64> {
+        self.id
+    }
+
+    /// Returns `state` of the session.
+    pub fn state(&self) -> Option<&SessionState> {
+        self.state.as_ref()
+    }
+}
+
 /// Session state
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -192,6 +217,22 @@ mod tests {
                 log: None,
                 state: None,
                 app_info: None,
+            }
+        }
+    }
+
+    impl SessionStateOnly {
+        fn some() -> SessionStateOnly {
+            SessionStateOnly {
+                id: Some(0),
+                state: Some(SessionState::NotStarted),
+            }
+        }
+
+        fn none() -> SessionStateOnly {
+            SessionStateOnly {
+                id: None,
+                state: None,
             }
         }
     }
@@ -277,6 +318,20 @@ mod tests {
     fn test_session_app_info() {
         for session in vec![Session::some(), Session::none()] {
             assert_eq!(session.app_info.as_ref(), session.app_info());
+        }
+    }
+
+    #[test]
+    fn test_session_state_only_id() {
+        for session_state_only in vec![SessionStateOnly::some(), SessionStateOnly::none()] {
+            assert_eq!(session_state_only.id, session_state_only.id());
+        }
+    }
+
+    #[test]
+    fn test_session_state_only_state() {
+        for session_state_only in vec![SessionStateOnly::some(), SessionStateOnly::none()] {
+            assert_eq!(session_state_only.state.as_ref(), session_state_only.state());
         }
     }
 }
