@@ -5,9 +5,7 @@
 //! * 0.3.0
 //! * 0.4.0
 
-#[macro_use]
-extern crate hyper;
-extern crate reqwest;
+extern crate curl;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;

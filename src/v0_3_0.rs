@@ -1,11 +1,14 @@
 use http;
-use http::client;
+use http::Method;
+use http::Method::*;
+use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 
 /// Apache Livy REST API client
 pub struct Client {
     url: String,
-    client: client::BasicClient,
+    gssnegotiate: Option<bool>,
+    username: Option<String>,
 }
 
 impl Client {
@@ -15,13 +18,28 @@ impl Client {
     /// ```
     /// use livy::v0_3_0::Client;
     ///
-    /// let client = Client::new("http://example.com:8998");
+    /// let client = Client::new("http://example.com:8998", None, None);
     /// ```
-    pub fn new(url: &str) -> Client {
+    ///
+    /// ```
+    /// use livy::v0_3_0::Client;
+    ///
+    /// let client = Client::new("http://example.com:8998", Some(true), Some("username".to_string()));
+    /// ```
+    pub fn new(url: &str, gssnegotiate: Option<bool>, username: Option<String>) -> Client {
         Client {
             url: http::remove_trailing_slash(url),
-            client: client::BasicClient::new(),
+            gssnegotiate,
+            username,
         }
+    }
+
+    /// Sends an HTTP request and returns the result.
+    fn send<T: DeserializeOwned>(&self, method: Method, path: &str) -> Result<T, String> {
+        http::send(method,
+                   format!("{}{}", self.url, path).as_str(),
+                   self.gssnegotiate.as_ref(),
+                   self.username.as_ref().map(String::as_ref))
     }
 
     /// Gets information of sessions and returns it.
@@ -31,22 +49,22 @@ impl Client {
             http::param("size", size)
         ]);
 
-        self.client.get(format!("{}/sessions{}", self.url, params).as_str())
+        self.send(GET, format!("/sessions{}", params).as_str())
     }
 
     /// Gets information of a single session and returns it.
     pub fn get_session(&self, session_id: i64) -> Result<Session, String> {
-        self.client.get(format!("{}/sessions/{}", self.url, session_id).as_str())
+        self.send(GET, format!("/sessions/{}", session_id).as_str())
     }
 
     /// Gets session state information of a single session and returns it.
     pub fn get_session_state(&self, session_id: i64) -> Result<SessionStateOnly, String> {
-        self.client.get(format!("{}/sessions/{}/state", self.url, session_id).as_str())
+        self.send(GET, format!("/sessions/{}/state", session_id).as_str())
     }
 
     /// Deletes the session whose id is equal to `session_id`.
-    pub fn delete_session(&self, session_id: i64) -> Result<(), String> {
-        self.client.delete(format!("{}/sessions/{}", self.url, session_id).as_str())
+    pub fn delete_session(&self, session_id: i64) -> Result<SessionDeleteResult, String> {
+        self.send(DELETE, format!("/sessions/{}", session_id).as_str())
     }
 
     /// Gets the log lines of a single session and returns them.
@@ -56,22 +74,22 @@ impl Client {
             http::param("size", size)
         ]);
 
-        self.client.get(format!("{}/sessions/{}/log{}", self.url, session_id, params).as_str())
+        self.send(GET, format!("/sessions/{}/log{}", session_id, params).as_str())
     }
 
     /// Gets the statements of a single session and returns them.
     pub fn get_statements(&self, session_id: i64) -> Result<Statements, String> {
-        self.client.get(format!("{}/sessions/{}/statements", self.url, session_id).as_str())
+        self.send(GET, format!("/sessions/{}/statements", session_id).as_str())
     }
 
     /// Gets a single statement of a single session and returns it.
     pub fn get_statement(&self, session_id: i64, statement_id: i64) -> Result<Statement, String> {
-        self.client.get(format!("{}/sessions/{}/statements/{}", self.url, session_id, statement_id).as_str())
+        self.send(GET, format!("/sessions/{}/statements/{}", session_id, statement_id).as_str())
     }
 
     /// Cancel a single statement.
     pub fn cancel_statement(&self, session_id: i64, statement_id: i64) -> Result<StatementCancelResult, String> {
-        self.client.post(format!("{}/sessions/{}/statements/{}/cancel", self.url, session_id, statement_id).as_str(), String::new())
+        self.send(POST, format!("/sessions/{}/statements/{}/cancel", session_id, statement_id).as_str())
     }
 }
 
@@ -174,6 +192,19 @@ impl SessionStateOnly {
     /// Returns `state` of the session.
     pub fn state(&self) -> Option<&SessionState> {
         self.state.as_ref()
+    }
+}
+
+/// Session delete result
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct SessionDeleteResult {
+    msg: Option<String>,
+}
+
+impl SessionDeleteResult {
+    /// Returns `msg` of the session delete result.
+    pub fn msg(&self) -> Option<&str> {
+        self.msg.as_ref().map(String::as_str)
     }
 }
 
@@ -392,6 +423,20 @@ mod tests {
         }
     }
 
+    impl SessionDeleteResult {
+        fn some() -> SessionDeleteResult {
+            SessionDeleteResult {
+                msg: Some(String::new()),
+            }
+        }
+
+        fn none() -> SessionDeleteResult {
+            SessionDeleteResult {
+                msg: None,
+            }
+        }
+    }
+
     impl SessionLog {
         fn some() -> SessionLog {
             SessionLog {
@@ -480,9 +525,41 @@ mod tests {
 
     #[test]
     fn test_client_new() {
-        let url = "http://example.com:8998";
-        let client = Client::new(url);
-        assert_eq!(url, client.url);
+        struct TestCase {
+            url: &'static str,
+            expected_url: String,
+            gssnegotiate: Option<bool>,
+            username: Option<String>,
+        }
+
+        let test_cases = vec![
+            TestCase {
+                url: "http://example.com:8998",
+                expected_url: "http://example.com:8998".to_string(),
+                gssnegotiate: None,
+                username: None,
+            },
+            TestCase {
+                url: "http://example.com:8998/",
+                expected_url: "http://example.com:8998".to_string(),
+                gssnegotiate: Some(false),
+                username: Some("".to_string()),
+            },
+            TestCase {
+                url: "http://example.com:8998",
+                expected_url: "http://example.com:8998".to_string(),
+                gssnegotiate: Some(true),
+                username: Some("user".to_string()),
+            },
+        ];
+
+        for test_case in test_cases {
+            let client = Client::new(test_case.url, test_case.gssnegotiate.clone(), test_case.username.clone());
+
+            assert_eq!(test_case.expected_url, client.url);
+            assert_eq!(test_case.gssnegotiate, client.gssnegotiate);
+            assert_eq!(test_case.username, client.username);
+        }
     }
 
     #[test]
@@ -573,6 +650,13 @@ mod tests {
     fn test_session_state_only_state() {
         for session_state_only in vec![SessionStateOnly::some(), SessionStateOnly::none()] {
             assert_eq!(session_state_only.state.as_ref(), session_state_only.state());
+        }
+    }
+
+    #[test]
+    fn test_session_delete_result_msg() {
+        for session_delete_result in vec![SessionDeleteResult::some(), SessionDeleteResult::none()] {
+            assert_eq!(session_delete_result.msg.as_ref().map(String::as_str), session_delete_result.msg());
         }
     }
 

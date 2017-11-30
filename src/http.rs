@@ -1,9 +1,26 @@
-/// HTTP client
-pub mod client;
-
+use curl;
+use curl::easy::{Auth, Easy2, Handler, List, WriteError};
+use serde::de::DeserializeOwned;
+use serde_json;
 use std::fmt::Display;
 
-header! { (XRequestedBy, "X-Requested-By") => [String] }
+struct Collector(Vec<u8>);
+
+impl Handler for Collector {
+    fn write(&mut self, data: &[u8]) -> Result<usize, WriteError> {
+        self.0.extend_from_slice(data);
+        Ok(data.len())
+    }
+}
+
+/// HTTP Method
+pub enum Method {
+    GET,
+    POST,
+    DELETE,
+}
+
+use self::Method::*;
 
 /// Constructs a new `String` which represents a key-value
 /// parameter string from `key` and `value` and returns the
@@ -88,6 +105,58 @@ pub fn remove_trailing_slash(s: &str) -> String {
     } else {
         s.to_string()
     }
+}
+
+/// Sends an HTTP request, deserializes the response body and
+/// returns the result.
+pub fn send<T: DeserializeOwned>(method: Method, url: &str, gssnegotiate: Option<&bool>, username: Option<&str>) -> Result<T, String> {
+    let mut easy = Easy2::new(Collector(Vec::new()));
+    let mut auth = Auth::new();
+
+    if let Err(err) = perform(&mut easy, &mut auth, method, url, gssnegotiate, username) {
+        return Err(format!("{}", err));
+    }
+
+    match easy.response_code() {
+        Err(err) => return Err(format!("{}", err)),
+        Ok(200) => (),
+        Ok(status_code) => return Err(format!("invalid status code: {}", status_code)),
+    }
+
+    let res = String::from_utf8_lossy(&easy.get_ref().0);
+
+    let res = serde_json::from_str(res.as_ref());
+
+    match res {
+        Ok(res) => Ok(res),
+        Err(err) => Err(format!("{}", err)),
+    }
+}
+
+fn perform(easy: &mut Easy2<Collector>, auth: &mut Auth, method: Method, url: &str, gssnegotiate: Option<&bool>, username: Option<&str>) -> Result<(), curl::Error> {
+    match method {
+        GET => easy.get(true)?,
+        POST => easy.post(true)?,
+        DELETE => easy.custom_request("DELETE")?,
+    };
+
+    easy.url(url)?;
+
+    if let Some(gssnegotiate) = gssnegotiate {
+        auth.gssnegotiate(*gssnegotiate);
+        easy.http_auth(&auth)?;
+    }
+
+    if let Some(username) = username {
+        easy.username(username)?;
+    }
+
+    let mut headers = List::new();
+    headers.append("Content-Type: application/json")?;
+    headers.append("X-Requested-By: x")?;
+    easy.http_headers(headers)?;
+
+    easy.perform()
 }
 
 #[cfg(test)]
