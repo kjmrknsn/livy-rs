@@ -161,6 +161,22 @@ impl Client {
 
         self.get(format!("/batches{}", params).as_str())
     }
+
+    /// Creates a new batch.
+    ///
+    /// # HTTP Request
+    /// POST /batches
+    pub fn create_batch(&self, new_batch_request: NewBatchRequest) -> Result<Batch, String> {
+        self.post("/batches", Some(new_batch_request))
+    }
+
+    /// Gets a batch and returns it.
+    ///
+    /// # HTTP Request
+    /// GET /batches/{batchId}
+    pub fn get_batch(&self, batch_id: i64) -> Result<Batch, String> {
+        self.get(format!("/batches/{}", batch_id).as_str())
+    }
 }
 
 /// Active interactive sessions
@@ -493,6 +509,43 @@ impl Batch {
     pub fn state(&self) -> Option<&str> {
         self.state.as_ref().map(String::as_str)
     }
+}
+
+/// New batch request information
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NewBatchRequest {
+    pub file: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proxy_user: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub class_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub args: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub jars: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub py_files: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub files: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub driver_memory: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub driver_cores: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub executor_memory: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub executor_cores: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub num_executors: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub archives: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub queue: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub conf: Option<HashMap<String, String>>,
 }
 
 /// Session state
