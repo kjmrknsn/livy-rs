@@ -11,6 +11,8 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
+/// Apache Livy REST API client
+pub mod client;
 /// Utilities for sending an HTTP request and receiving an HTTP response
 pub mod http;
 /// Apache Livy 0.3.0 REST API client
