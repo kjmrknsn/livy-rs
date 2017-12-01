@@ -125,6 +125,14 @@ impl Client {
         self.get(format!("/sessions/{}/statements", session_id).as_str())
     }
 
+    /// Runs a statement in a session.
+    ///
+    /// # HTTP Request
+    /// POST /sessions/{sessionId}/statements
+    pub fn run_statement(&self, session_id: i64, run_statement_request: RunStatementRequest) -> Result<Statement, String> {
+        self.post(format!("/sessions/{}/statements", session_id).as_str(), Some(run_statement_request))
+    }
+
     /// Gets a single statement of a single session and returns it.
     ///
     /// # HTTP Request
@@ -340,6 +348,12 @@ impl Statements {
     pub fn statements(&self) -> Option<&Vec<Statement>> {
         self.statements.as_ref()
     }
+}
+
+/// Run statement request
+#[derive(Debug, Serialize)]
+pub struct RunStatementRequest {
+    pub code: String,
 }
 
 /// Statement

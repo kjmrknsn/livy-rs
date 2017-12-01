@@ -131,7 +131,9 @@ pub fn send<T: DeserializeOwned, U: Serialize>(method: Method, url: &str, data: 
     match easy.response_code() {
         Err(err) => return Err(format!("{}", err)),
         Ok(status_code) if status_code >= 200 && status_code <= 308 => (),
-        Ok(status_code) =>  return Err(format!("invalid status code: {}", status_code)),
+        Ok(status_code) =>  return Err(format!("invalid status code; code: {}, response: {}",
+                                               status_code,
+                                               String::from_utf8_lossy(&easy.get_ref().0))),
     }
 
     let res = String::from_utf8_lossy(&easy.get_ref().0);
