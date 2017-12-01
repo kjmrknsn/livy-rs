@@ -107,7 +107,7 @@ impl Client {
     /// Gets the log lines of a single session and returns them.
     ///
     /// # HTTP Request
-    /// GET /sessions/{sessionId}/logs
+    /// GET /sessions/{sessionId}/log
     pub fn get_session_log(&self, session_id: i64, from: Option<i64>, size: Option<i64>)-> Result<SessionLog, String> {
         let params = http::params(vec![
             http::param("from", from),
@@ -147,6 +147,19 @@ impl Client {
     /// POST /sessions/{sessionId}/statements/{statementId}/cancel
     pub fn cancel_statement(&self, session_id: i64, statement_id: i64) -> Result<StatementCancelResult, String> {
         self.post(format!("/sessions/{}/statements/{}/cancel", session_id, statement_id).as_str(), None::<()>)
+    }
+
+    /// Gets information of batches and returns it.
+    ///
+    /// # HTTP Request
+    /// GET /batches
+    pub fn get_batches(&self, from: Option<i64>, size: Option<i64>) -> Result<Batches, String> {
+        let params = http::params(vec![
+            http::param("from", from),
+            http::param("size", size)
+        ]);
+
+        self.get(format!("/batches{}", params).as_str())
     }
 }
 
@@ -419,6 +432,69 @@ impl StatementCancelResult {
     }
 }
 
+/// Batches information
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct Batches {
+    from: Option<i64>,
+    total: Option<i64>,
+    sessions: Option<Vec<Batch>>,
+}
+
+impl Batches {
+    /// Return `from` of the batches.
+    pub fn from(&self) -> Option<i64> {
+        self.from
+    }
+
+    /// Return `total` of the batches.
+    pub fn total(&self) -> Option<i64> {
+        self.total
+    }
+
+    /// Return `sessions` of the batches.j
+    pub fn sessions(&self) -> Option<&Vec<Batch>> {
+        self.sessions.as_ref()
+    }
+}
+
+/// Single batch information
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Batch {
+    id: Option<i64>,
+    app_id: Option<String>,
+    app_info: Option<HashMap<String, Option<String>>>,
+    log: Option<Vec<String>>,
+    state: Option<String>,
+}
+
+impl Batch {
+    /// Returns `id` of the batch.
+    pub fn id(&self) -> Option<i64> {
+        self.id
+    }
+
+    /// Returns `app_id` of the batch.
+    pub fn app_id(&self) -> Option<&str> {
+        self.app_id.as_ref().map(String::as_str)
+    }
+
+    /// Returns `app_info` of the batch.
+    pub fn app_info(&self) -> Option<&HashMap<String, Option<String>>> {
+        self.app_info.as_ref()
+    }
+
+    /// Returns `log` of the batch.
+    pub fn log(&self) -> Option<&Vec<String>> {
+        self.log.as_ref()
+    }
+
+    /// Returns `state` of the batch.
+    pub fn state(&self) -> Option<&str> {
+        self.state.as_ref().map(String::as_str)
+    }
+}
+
 /// Session state
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -617,6 +693,46 @@ mod tests {
         fn none() -> StatementCancelResult {
             StatementCancelResult {
                 msg: None,
+            }
+        }
+    }
+
+    impl Batches {
+        fn some() -> Batches {
+            Batches {
+                from: Some(0),
+                total: Some(1),
+                sessions: Some(Vec::new()),
+            }
+        }
+
+        fn none() -> Batches {
+            Batches {
+                from: None,
+                total: None,
+                sessions: None,
+            }
+        }
+    }
+
+    impl Batch {
+        fn some() -> Batch {
+            Batch {
+                id: Some(0),
+                app_id: Some("app_id".to_string()),
+                app_info: Some(HashMap::new()),
+                log: Some(Vec::new()),
+                state: Some(String::new()),
+            }
+        }
+
+        fn none() -> Batch {
+            Batch {
+                id: None,
+                app_id: None,
+                app_info: None,
+                log: None,
+                state: None,
             }
         }
     }
@@ -846,6 +962,62 @@ mod tests {
     fn test_statement_cancel_result_msg() {
         for statement_cancel_result in vec![StatementCancelResult::some(), StatementCancelResult::none()] {
             assert_eq!(statement_cancel_result.msg.as_ref().map(String::as_str), statement_cancel_result.msg());
+        }
+    }
+
+    #[test]
+    fn test_batches_from() {
+        for batches in vec![Batches::some(), Batches::none()] {
+            assert_eq!(batches.from, batches.from());
+        }
+    }
+
+    #[test]
+    fn test_batches_total() {
+        for batches in vec![Batches::some(), Batches::none()] {
+            assert_eq!(batches.total, batches.total());
+        }
+    }
+
+    #[test]
+    fn test_batches_sessions() {
+        for batches in vec![Batches::some(), Batches::none()] {
+            assert_eq!(batches.sessions.as_ref(), batches.sessions());
+        }
+    }
+
+    #[test]
+    fn test_batch_id() {
+        for batch in vec![Batch::some(), Batch::none()] {
+            assert_eq!(batch.id, batch.id());
+        }
+    }
+
+    #[test]
+    fn test_batch_app_id() {
+        for batch in vec![Batch::some(), Batch::none()] {
+            assert_eq!(batch.app_id.as_ref().map(String::as_str), batch.app_id());
+        }
+    }
+
+    #[test]
+    fn test_batch_app_info() {
+        for batch in vec![Batch::some(), Batch::none()] {
+            assert_eq!(batch.app_info.as_ref(), batch.app_info());
+        }
+    }
+
+    #[test]
+    fn test_batch_log() {
+        for batch in vec![Batch::some(), Batch::none()] {
+            assert_eq!(batch.log.as_ref(), batch.log());
+        }
+    }
+
+    #[test]
+    fn test_batch_state() {
+        for batch in vec![Batch::some(), Batch::none()] {
+            assert_eq!(batch.state.as_ref().map(String::as_ref), batch.state());
         }
     }
 }

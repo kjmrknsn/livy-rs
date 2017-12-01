@@ -135,9 +135,9 @@ This crate is still under development. There are some unimplemented APIs.
 * POST /sessions/{sessionId}/statements
 * GET /sessions/{sessionId}/statements/{statementId}
 * POST /sessions/{sessionId}/statements/{statementId}/cancel
+* GET /batches
 
 ### Unimplemented APIs
-* GET /batches
 * POST /batches
 * GET /batches/{batchId}
 * GET /batches/{batchId}/state
