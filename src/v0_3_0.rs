@@ -5,6 +5,9 @@ use std::collections::HashMap;
 
 impl Client {
     /// Gets information of sessions and returns it.
+    ///
+    /// # HTTP Request
+    /// GET /sessions
     pub fn get_sessions(&self, from: Option<i64>, size: Option<i64>) -> Result<Sessions, String> {
         let params = http::params(vec![
             http::param("from", from),
@@ -15,21 +18,33 @@ impl Client {
     }
 
     /// Gets information of a single session and returns it.
+    ///
+    /// # HTTP Request
+    /// GET /sessions/{sessionId}
     pub fn get_session(&self, session_id: i64) -> Result<Session, String> {
         self.send(GET, format!("/sessions/{}", session_id).as_str())
     }
 
     /// Gets session state information of a single session and returns it.
+    ///
+    /// # HTTP Request
+    /// GET /sessions/{sessionId}/state
     pub fn get_session_state(&self, session_id: i64) -> Result<SessionStateOnly, String> {
         self.send(GET, format!("/sessions/{}/state", session_id).as_str())
     }
 
     /// Deletes the session whose id is equal to `session_id`.
+    ///
+    /// # HTTP Request
+    /// DELETE /sessions/{sessionId}
     pub fn delete_session(&self, session_id: i64) -> Result<SessionDeleteResult, String> {
         self.send(DELETE, format!("/sessions/{}", session_id).as_str())
     }
 
     /// Gets the log lines of a single session and returns them.
+    ///
+    /// # HTTP Request
+    /// GET /sessions/{sessionId}/logs
     pub fn get_session_log(&self, session_id: i64, from: Option<i64>, size: Option<i64>)-> Result<SessionLog, String> {
         let params = http::params(vec![
             http::param("from", from),
@@ -40,16 +55,25 @@ impl Client {
     }
 
     /// Gets the statements of a single session and returns them.
+    ///
+    /// # HTTP Request
+    /// GET /sessions/{sessionId}/statements
     pub fn get_statements(&self, session_id: i64) -> Result<Statements, String> {
         self.send(GET, format!("/sessions/{}/statements", session_id).as_str())
     }
 
     /// Gets a single statement of a single session and returns it.
+    ///
+    /// # HTTP Request
+    /// GET /sessions/{sessionId}/statements/{statementId}
     pub fn get_statement(&self, session_id: i64, statement_id: i64) -> Result<Statement, String> {
         self.send(GET, format!("/sessions/{}/statements/{}", session_id, statement_id).as_str())
     }
 
     /// Cancel a single statement.
+    ///
+    /// # HTTP Request
+    /// POST /sessions/{sessionId}/statements/{statementId}/cancel
     pub fn cancel_statement(&self, session_id: i64, statement_id: i64) -> Result<StatementCancelResult, String> {
         self.send(POST, format!("/sessions/{}/statements/{}/cancel", session_id, statement_id).as_str())
     }
