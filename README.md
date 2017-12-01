@@ -138,8 +138,8 @@ This crate is still under development. There are some unimplemented APIs.
 * GET /batches
 * POST /batches
 * GET /batches/{batchId}
-
-### Unimplemented APIs
 * GET /batches/{batchId}/state
 * DELETE /batches/{batchId}
+
+### Unimplemented APIs
 * GET /batches/{batchId}/log

@@ -96,11 +96,11 @@ impl Client {
         self.get(format!("/sessions/{}/state", session_id).as_str())
     }
 
-    /// Deletes the session whose id is equal to `session_id`.
+    /// Kills the session whose id is equal to `session_id`.
     ///
     /// # HTTP Request
     /// DELETE /sessions/{sessionId}
-    pub fn delete_session(&self, session_id: i64) -> Result<SessionDeleteResult, String> {
+    pub fn kill_session(&self, session_id: i64) -> Result<SessionKillResult, String> {
         self.delete(format!("/sessions/{}", session_id).as_str())
     }
 
@@ -176,6 +176,22 @@ impl Client {
     /// GET /batches/{batchId}
     pub fn get_batch(&self, batch_id: i64) -> Result<Batch, String> {
         self.get(format!("/batches/{}", batch_id).as_str())
+    }
+
+    /// Gets the state of batch session.
+    ///
+    /// # HTTP Request
+    /// GET /batches/{batchId}/state
+    pub fn get_batch_state(&self, batch_id: i64) -> Result<BatchStateOnly, String> {
+        self.get(format!("/batches/{}/state", batch_id).as_str())
+    }
+
+    /// Kills the batch job.
+    ///
+    /// # HTTP Request
+    /// DELETE /batches/{batchId}
+    pub fn kill_batch(&self, batch_id: i64) -> Result<BatchKillResult, String> {
+        self.delete(format!("/batches/{}", batch_id).as_str())
     }
 }
 
@@ -316,14 +332,14 @@ impl SessionStateOnly {
     }
 }
 
-/// Session delete result
+/// Session kill result
 #[derive(Debug, Deserialize, PartialEq)]
-pub struct SessionDeleteResult {
+pub struct SessionKillResult {
     msg: Option<String>,
 }
 
-impl SessionDeleteResult {
-    /// Returns `msg` of the session delete result.
+impl SessionKillResult {
+    /// Returns `msg` of the session kill result.
     pub fn msg(&self) -> Option<&str> {
         self.msg.as_ref().map(String::as_str)
     }
@@ -548,6 +564,38 @@ pub struct NewBatchRequest {
     pub conf: Option<HashMap<String, String>>,
 }
 
+/// Batch information which has only its state information.
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct BatchStateOnly {
+    id: Option<i64>,
+    state: Option<String>,
+}
+
+impl BatchStateOnly {
+    /// Returns `id` of the batch.
+    pub fn id(&self) -> Option<i64> {
+        self.id
+    }
+
+    /// Returns `state` of the batch.
+    pub fn state(&self) -> Option<&str> {
+        self.state.as_ref().map(String::as_ref)
+    }
+}
+
+/// Batch kill result
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct BatchKillResult {
+    msg: Option<String>,
+}
+
+impl BatchKillResult {
+    /// Returns `msg` of the batch kill result.
+    pub fn msg(&self) -> Option<&str> {
+        self.msg.as_ref().map(String::as_str)
+    }
+}
+
 /// Session state
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -650,15 +698,15 @@ mod tests {
         }
     }
 
-    impl SessionDeleteResult {
-        fn some() -> SessionDeleteResult {
-            SessionDeleteResult {
+    impl SessionKillResult {
+        fn some() -> SessionKillResult {
+            SessionKillResult {
                 msg: Some(String::new()),
             }
         }
 
-        fn none() -> SessionDeleteResult {
-            SessionDeleteResult {
+        fn none() -> SessionKillResult {
+            SessionKillResult {
                 msg: None,
             }
         }
@@ -786,6 +834,36 @@ mod tests {
                 app_info: None,
                 log: None,
                 state: None,
+            }
+        }
+    }
+
+    impl BatchStateOnly {
+        fn some() -> BatchStateOnly {
+            BatchStateOnly {
+                id: Some(0),
+                state: Some("".to_string()),
+            }
+        }
+
+        fn none() -> BatchStateOnly {
+            BatchStateOnly {
+                id: None,
+                state: None,
+            }
+        }
+    }
+
+    impl BatchKillResult {
+        fn some() -> BatchKillResult {
+            BatchKillResult {
+                msg: Some(String::new()),
+            }
+        }
+
+        fn none() -> BatchKillResult {
+            BatchKillResult {
+                msg: None,
             }
         }
     }
@@ -921,9 +999,9 @@ mod tests {
     }
 
     #[test]
-    fn test_session_delete_result_msg() {
-        for session_delete_result in vec![SessionDeleteResult::some(), SessionDeleteResult::none()] {
-            assert_eq!(session_delete_result.msg.as_ref().map(String::as_str), session_delete_result.msg());
+    fn test_session_kill_result_msg() {
+        for session_kill_result in vec![SessionKillResult::some(), SessionKillResult::none()] {
+            assert_eq!(session_kill_result.msg.as_ref().map(String::as_str), session_kill_result.msg());
         }
     }
 
@@ -1071,6 +1149,27 @@ mod tests {
     fn test_batch_state() {
         for batch in vec![Batch::some(), Batch::none()] {
             assert_eq!(batch.state.as_ref().map(String::as_ref), batch.state());
+        }
+    }
+
+    #[test]
+    fn test_batch_state_only_id() {
+        for batch_state_only in vec![BatchStateOnly::some(), BatchStateOnly::none()] {
+            assert_eq!(batch_state_only.id, batch_state_only.id());
+        }
+    }
+
+    #[test]
+    fn test_batch_state_only_state() {
+        for batch_state_only in vec![BatchStateOnly::some(), BatchStateOnly::none()] {
+            assert_eq!(batch_state_only.state.as_ref().map(String::as_ref), batch_state_only.state());
+        }
+    }
+
+    #[test]
+    fn test_batch_kill_result_msg() {
+        for batch_kill_result in vec![BatchKillResult::some(), BatchKillResult::none()] {
+            assert_eq!(batch_kill_result.msg.as_ref().map(String::as_str), batch_kill_result.msg());
         }
     }
 }
