@@ -1,5 +1,6 @@
 use curl;
 use curl::easy::{Auth, Easy2, Handler, List, WriteError};
+use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json;
 use std::fmt::Display;
@@ -109,18 +110,28 @@ pub fn remove_trailing_slash(s: &str) -> String {
 
 /// Sends an HTTP request, deserializes the response body and
 /// returns the result.
-pub fn send<T: DeserializeOwned>(method: Method, url: &str, gssnegotiate: Option<&bool>, username: Option<&str>) -> Result<T, String> {
+pub fn send<T: DeserializeOwned, U: Serialize>(method: Method, url: &str, data: Option<U>, gssnegotiate: Option<&bool>, username: Option<&str>) -> Result<T, String> {
     let mut easy = Easy2::new(Collector(Vec::new()));
     let mut auth = Auth::new();
 
-    if let Err(err) = perform(&mut easy, &mut auth, method, url, gssnegotiate, username) {
+    let data = match data {
+        Some(data) => {
+            match serde_json::to_string(&data) {
+                Ok(data) => Some(data),
+                Err(err) => return Err(format!("{}", err)),
+            }
+        },
+        None => None,
+    };
+
+    if let Err(err) = perform(&mut easy, &mut auth, method, url, data.as_ref().map(String::as_bytes), gssnegotiate, username) {
         return Err(format!("{}", err));
     }
 
     match easy.response_code() {
         Err(err) => return Err(format!("{}", err)),
-        Ok(200) => (),
-        Ok(status_code) => return Err(format!("invalid status code: {}", status_code)),
+        Ok(status_code) if status_code >= 200 && status_code <= 308 => (),
+        Ok(status_code) =>  return Err(format!("invalid status code: {}", status_code)),
     }
 
     let res = String::from_utf8_lossy(&easy.get_ref().0);
@@ -133,10 +144,15 @@ pub fn send<T: DeserializeOwned>(method: Method, url: &str, gssnegotiate: Option
     }
 }
 
-fn perform(easy: &mut Easy2<Collector>, auth: &mut Auth, method: Method, url: &str, gssnegotiate: Option<&bool>, username: Option<&str>) -> Result<(), curl::Error> {
+fn perform(easy: &mut Easy2<Collector>, auth: &mut Auth, method: Method, url: &str, data: Option<&[u8]>, gssnegotiate: Option<&bool>, username: Option<&str>) -> Result<(), curl::Error> {
     match method {
         GET => easy.get(true)?,
-        POST => easy.post(true)?,
+        POST => {
+            easy.post(true)?;
+            if let Some(data) = data {
+                easy.post_fields_copy(data)?;
+            }
+        },
         DELETE => easy.custom_request("DELETE")?,
     };
 

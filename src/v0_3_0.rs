@@ -1,6 +1,7 @@
 use http;
 use http::Method;
 use http::Method::*;
+use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 
@@ -35,11 +36,27 @@ impl Client {
     }
 
     /// Sends an HTTP request and returns the result.
-    fn send<T: DeserializeOwned>(&self, method: Method, path: &str) -> Result<T, String> {
+    fn send<T: DeserializeOwned, U: Serialize>(&self, method: Method, path: &str, data: Option<U>) -> Result<T, String> {
         http::send(method,
                    format!("{}{}", self.url, path).as_str(),
+                   data,
                    self.gssnegotiate.as_ref(),
                    self.username.as_ref().map(String::as_ref))
+    }
+
+    /// Sends an HTTP GET request and returns the result.
+    fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T, String> {
+        self.send(GET, path, None::<()>)
+    }
+
+    /// Sends an HTTP POST request and returns the result.
+    fn post<T: DeserializeOwned, U: Serialize>(&self, path: &str, data: Option<U>) -> Result<T, String> {
+        self.send(POST, path, data)
+    }
+
+    /// Sends an HTTP DELETE request and returns the result.
+    fn delete<T: DeserializeOwned>(&self, path: &str) -> Result<T, String> {
+        self.send(DELETE, path, None::<()>)
     }
 
     /// Gets information of sessions and returns it.
@@ -52,7 +69,15 @@ impl Client {
             http::param("size", size)
         ]);
 
-        self.send(GET, format!("/sessions{}", params).as_str())
+        self.get(format!("/sessions{}", params).as_str())
+    }
+
+    /// Creates a new session.
+    ///
+    /// # HTTP Request
+    /// POST /sessions
+    pub fn create_session(&self, new_session_request: NewSessionRequest) -> Result<Session, String> {
+        self.post("/sessions", Some(new_session_request))
     }
 
     /// Gets information of a single session and returns it.
@@ -60,7 +85,7 @@ impl Client {
     /// # HTTP Request
     /// GET /sessions/{sessionId}
     pub fn get_session(&self, session_id: i64) -> Result<Session, String> {
-        self.send(GET, format!("/sessions/{}", session_id).as_str())
+        self.get(format!("/sessions/{}", session_id).as_str())
     }
 
     /// Gets session state information of a single session and returns it.
@@ -68,7 +93,7 @@ impl Client {
     /// # HTTP Request
     /// GET /sessions/{sessionId}/state
     pub fn get_session_state(&self, session_id: i64) -> Result<SessionStateOnly, String> {
-        self.send(GET, format!("/sessions/{}/state", session_id).as_str())
+        self.get(format!("/sessions/{}/state", session_id).as_str())
     }
 
     /// Deletes the session whose id is equal to `session_id`.
@@ -76,7 +101,7 @@ impl Client {
     /// # HTTP Request
     /// DELETE /sessions/{sessionId}
     pub fn delete_session(&self, session_id: i64) -> Result<SessionDeleteResult, String> {
-        self.send(DELETE, format!("/sessions/{}", session_id).as_str())
+        self.delete(format!("/sessions/{}", session_id).as_str())
     }
 
     /// Gets the log lines of a single session and returns them.
@@ -89,7 +114,7 @@ impl Client {
             http::param("size", size)
         ]);
 
-        self.send(GET, format!("/sessions/{}/log{}", session_id, params).as_str())
+        self.get(format!("/sessions/{}/log{}", session_id, params).as_str())
     }
 
     /// Gets the statements of a single session and returns them.
@@ -97,7 +122,7 @@ impl Client {
     /// # HTTP Request
     /// GET /sessions/{sessionId}/statements
     pub fn get_statements(&self, session_id: i64) -> Result<Statements, String> {
-        self.send(GET, format!("/sessions/{}/statements", session_id).as_str())
+        self.get(format!("/sessions/{}/statements", session_id).as_str())
     }
 
     /// Gets a single statement of a single session and returns it.
@@ -105,7 +130,7 @@ impl Client {
     /// # HTTP Request
     /// GET /sessions/{sessionId}/statements/{statementId}
     pub fn get_statement(&self, session_id: i64, statement_id: i64) -> Result<Statement, String> {
-        self.send(GET, format!("/sessions/{}/statements/{}", session_id, statement_id).as_str())
+        self.get(format!("/sessions/{}/statements/{}", session_id, statement_id).as_str())
     }
 
     /// Cancel a single statement.
@@ -113,7 +138,7 @@ impl Client {
     /// # HTTP Request
     /// POST /sessions/{sessionId}/statements/{statementId}/cancel
     pub fn cancel_statement(&self, session_id: i64, statement_id: i64) -> Result<StatementCancelResult, String> {
-        self.send(POST, format!("/sessions/{}/statements/{}/cancel", session_id, statement_id).as_str())
+        self.post(format!("/sessions/{}/statements/{}/cancel", session_id, statement_id).as_str(), None::<()>)
     }
 }
 
@@ -141,6 +166,41 @@ impl Sessions {
     pub fn sessions(&self) -> Option<&Vec<Session>> {
         self.sessions.as_ref()
     }
+}
+
+/// New session request information
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NewSessionRequest {
+    pub kind: SessionKind,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proxy_user: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub jars: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub py_files: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub files: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub driver_memory: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub driver_cores: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub executor_memory: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub executor_cores: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub num_executors: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub archives: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub queue: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub conf: Option<HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub heartbeat_timeout_in_second: Option<i64>,
 }
 
 /// Session which represents an interactive shell
@@ -360,7 +420,7 @@ pub enum SessionState {
 }
 
 /// Session kind
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SessionKind {
     Spark,
