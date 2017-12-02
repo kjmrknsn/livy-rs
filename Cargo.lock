@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "livy"
-version = "0.0.12"
+version = "0.1.0"
 dependencies = [
  "curl 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.21 (registry+https://github.com/rust-lang/crates.io-index)",

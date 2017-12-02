@@ -193,6 +193,19 @@ impl Client {
     pub fn kill_batch(&self, batch_id: i64) -> Result<BatchKillResult, String> {
         self.delete(format!("/batches/{}", batch_id).as_str())
     }
+
+    /// Gets the log lines from a batch and returns them.
+    ///
+    /// # HTTP Request
+    /// GET /batches/{batchId}/log
+    pub fn get_batch_log(&self, batch_id: i64, from: Option<i64>, size: Option<i64>) -> Result<BatchLog, String> {
+        let params = http::params(vec![
+            http::param("from", from),
+            http::param("size", size)
+        ]);
+
+        self.get(format!("/batches/{}/log{}", batch_id, params).as_str())
+    }
 }
 
 /// Active interactive sessions
@@ -564,6 +577,7 @@ pub struct NewBatchRequest {
     pub conf: Option<HashMap<String, String>>,
 }
 
+
 /// Batch information which has only its state information.
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct BatchStateOnly {
@@ -593,6 +607,37 @@ impl BatchKillResult {
     /// Returns `msg` of the batch kill result.
     pub fn msg(&self) -> Option<&str> {
         self.msg.as_ref().map(String::as_str)
+    }
+}
+
+/// Batch log
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct BatchLog {
+    id: Option<i64>,
+    from: Option<i64>,
+    total: Option<i64>,
+    log: Option<Vec<String>>,
+}
+
+impl BatchLog {
+    /// Returns `id` of the batch.
+    pub fn id(&self) -> Option<i64> {
+        self.id
+    }
+
+    /// Returns `from` of the batch log.
+    pub fn from(&self) -> Option<i64> {
+        self.from
+    }
+
+    /// Returns `total` of the batch log.
+    pub fn total(&self) -> Option<i64> {
+        self.total
+    }
+
+    /// Returns `log` of the batch log.
+    pub fn log(&self) -> Option<&Vec<String>> {
+        self.log.as_ref()
     }
 }
 
@@ -864,6 +909,26 @@ mod tests {
         fn none() -> BatchKillResult {
             BatchKillResult {
                 msg: None,
+            }
+        }
+    }
+
+    impl BatchLog {
+        fn some() -> BatchLog {
+            BatchLog {
+                id: Some(0),
+                from: Some(1),
+                total: Some(2),
+                log: Some(Vec::new()),
+            }
+        }
+
+        fn none() -> BatchLog {
+            BatchLog {
+                id: None,
+                from: None,
+                total: None,
+                log: None,
             }
         }
     }
@@ -1170,6 +1235,34 @@ mod tests {
     fn test_batch_kill_result_msg() {
         for batch_kill_result in vec![BatchKillResult::some(), BatchKillResult::none()] {
             assert_eq!(batch_kill_result.msg.as_ref().map(String::as_str), batch_kill_result.msg());
+        }
+    }
+
+    #[test]
+    fn test_batch_log_id() {
+        for batch_log in vec![BatchLog::some(), BatchLog::none()] {
+            assert_eq!(batch_log.id, batch_log.id());
+        }
+    }
+
+    #[test]
+    fn test_batch_log_from() {
+        for batch_log in vec![BatchLog::some(), BatchLog::none()] {
+            assert_eq!(batch_log.from, batch_log.from());
+        }
+    }
+
+    #[test]
+    fn test_batch_log_total() {
+        for batch_log in vec![BatchLog::some(), BatchLog::none()] {
+            assert_eq!(batch_log.total, batch_log.total());
+        }
+    }
+
+    #[test]
+    fn test_batch_log_log() {
+        for batch_log in vec![BatchLog::some(), BatchLog::none()] {
+            assert_eq!(batch_log.log.as_ref(), batch_log.log());
         }
     }
 }

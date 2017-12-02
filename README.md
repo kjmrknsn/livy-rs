@@ -12,7 +12,7 @@ First, add the following settings to `Cargo.toml`:
 
 ```toml
 [dependencies]
-livy = "0.0"
+livy = "0.1"
 ```
 
 Next, add the followling line to the crate root:
@@ -117,29 +117,9 @@ fn main() {
 }
 ```
 
+## Documentation
+[https://docs.rs/livy/](https://docs.rs/livy/)
+
 ## Supported Versions of Apache Livy
 * 0.3.0
 * 0.4.0
-
-## Current Status
-This crate is still under development. There are some unimplemented APIs.
-
-### Implemented APIs
-* GET /sessions
-* POST /sessions
-* GET /sessions/{sessionId}
-* GET /sessions/{sessionId}/state
-* DELETE /sessions/{sessionId}
-* GET /sessions/{sessionId}/logs
-* GET /sessions/{sessionId}/statements
-* POST /sessions/{sessionId}/statements
-* GET /sessions/{sessionId}/statements/{statementId}
-* POST /sessions/{sessionId}/statements/{statementId}/cancel
-* GET /batches
-* POST /batches
-* GET /batches/{batchId}
-* GET /batches/{batchId}/state
-* DELETE /batches/{batchId}
-
-### Unimplemented APIs
-* GET /batches/{batchId}/log
