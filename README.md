@@ -12,7 +12,7 @@ First, add the following settings to `Cargo.toml`:
 
 ```toml
 [dependencies]
-livy = "0.1"
+livy = "0.2"
 ```
 
 Next, add the followling line to the crate root:
