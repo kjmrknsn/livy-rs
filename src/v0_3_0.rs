@@ -209,7 +209,7 @@ impl Client {
 }
 
 /// Active interactive sessions
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sessions {
     pub from: Option<i64>,
@@ -218,7 +218,7 @@ pub struct Sessions {
 }
 
 /// New session request information
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewSessionRequest {
     pub kind: SessionKind,
@@ -253,7 +253,7 @@ pub struct NewSessionRequest {
 }
 
 /// Session which represents an interactive shell
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Session {
     pub id: Option<i64>,
@@ -267,7 +267,7 @@ pub struct Session {
 }
 
 /// Session information which has only its state information
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionStateOnly {
     pub id: Option<i64>,
@@ -275,13 +275,13 @@ pub struct SessionStateOnly {
 }
 
 /// Session kill result
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct SessionKillResult {
     pub msg: Option<String>,
 }
 
 /// Session log
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionLog {
     pub id: Option<i64>,
@@ -291,20 +291,20 @@ pub struct SessionLog {
 }
 
 /// Statements
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct Statements {
     pub total_statements: Option<i64>,
     pub statements: Option<Vec<Statement>>,
 }
 
 /// Run statement request
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct RunStatementRequest {
     pub code: String,
 }
 
 /// Statement
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct Statement {
     pub id: Option<i64>,
     pub state: Option<StatementState>,
@@ -312,7 +312,7 @@ pub struct Statement {
 }
 
 /// Statement output
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct StatementOutput {
     pub status: Option<String>,
     pub execution_count: Option<i64>,
@@ -320,13 +320,13 @@ pub struct StatementOutput {
 }
 
 /// Statement cancel result
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct StatementCancelResult {
     pub msg: Option<String>,
 }
 
 /// Batches information
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct Batches {
     pub from: Option<i64>,
     pub total: Option<i64>,
@@ -334,7 +334,7 @@ pub struct Batches {
 }
 
 /// Single batch information
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Batch {
     pub id: Option<i64>,
@@ -345,7 +345,7 @@ pub struct Batch {
 }
 
 /// New batch request information
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewBatchRequest {
     pub file: String,
@@ -382,20 +382,20 @@ pub struct NewBatchRequest {
 }
 
 /// Batch information which has only its state information.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct BatchStateOnly {
     pub id: Option<i64>,
     pub state: Option<String>,
 }
 
 /// Batch kill result
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct BatchKillResult {
     pub msg: Option<String>,
 }
 
 /// Batch log
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct BatchLog {
     pub id: Option<i64>,
     pub from: Option<i64>,
@@ -404,7 +404,7 @@ pub struct BatchLog {
 }
 
 /// Session state
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SessionState {
     NotStarted,
@@ -428,7 +428,7 @@ pub enum SessionKind {
 }
 
 /// Statement state
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum StatementState {
     Waiting,
