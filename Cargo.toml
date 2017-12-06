@@ -1,6 +1,6 @@
 [package]
 name = "livy"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Keiji Yoshida <kjmrknsn@gmail.com>"]
 description = "Apache Livy REST API Client"
 license = "MIT/Apache-2.0"
@@ -12,7 +12,6 @@ keywords = ["livy"]
 categories = ["api-bindings", "command-line-utilities", "web-programming::http-client"]
 
 [badges]
-codecov = { repository = "kjmrknsn/livy-rs", branch = "master", service = "github" }
 travis-ci = { repository = "kjmrknsn/livy-rs", branch = "master" }
 
 [dependencies]

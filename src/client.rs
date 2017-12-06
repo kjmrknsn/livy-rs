@@ -17,13 +17,13 @@ impl Client {
     ///
     /// # Examples
     /// ```
-    /// use livy::v0_3_0::Client;
+    /// use livy::client::Client;
     ///
     /// let client = Client::new("http://example.com:8998", None, None);
     /// ```
     ///
     /// ```
-    /// use livy::v0_3_0::Client;
+    /// use livy::client::Client;
     ///
     /// let client = Client::new("http://example.com:8998", Some(true), Some("username".to_string()));
     /// ```

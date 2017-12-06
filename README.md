@@ -1,6 +1,5 @@
 # Apache Livy REST API Client
 [![Crates.io](https://img.shields.io/crates/v/livy.svg)](https://crates.io/crates/livy)
-[![codecov](https://codecov.io/gh/kjmrknsn/livy-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/kjmrknsn/livy-rs)
 [![Build Status](https://travis-ci.org/kjmrknsn/livy-rs.svg?branch=master)](https://travis-ci.org/kjmrknsn/livy-rs)
 [![Released API docs](https://docs.rs/livy/badge.svg)](http://docs.rs/livy)
 
@@ -15,7 +14,7 @@ First, add the following settings to `Cargo.toml`:
 livy = "0.2"
 ```
 
-Next, add the followling line to the crate root:
+Next, add the following line to the crate root:
 
 ```rust
 extern crate livy;
@@ -25,7 +24,7 @@ extern crate livy;
 ```rust
 extern crate livy;
 
-use livy::v0_4_0::Client;
+use livy::client::Client;
 
 fn main() {
     // http(s)://[livy_host]:[livy_port]
